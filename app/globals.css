@@ -1,26 +1,40 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* ---- BRAND TOKENS (see identity.md, section 3) ----
+   Stored as RGB channels so Tailwind opacity classes work (e.g. text-paper/75).
+   In plain CSS, use them as rgb(var(--steel)). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --steel: 31 31 31;    /* #1F1F1F logo charcoal: header, hero, footer, dark sections */
+  --board: 230 229 225; /* #E6E5E1 plasterboard grey: panels, alternate sections      */
+  --wool: 235 183 57;   /* #EBB739 logo gold: call-to-action buttons only             */
+  --mark: 23 96 159;    /* #17609F logo blue, darkened for contrast: links, labels    */
+  --paper: 245 244 240; /* #F5F4F0 logo cream, lightened: page background             */
+  --ink: 31 31 31;      /* #1F1F1F body text                                          */
+  --f-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --f-body: "Hanken Grotesk", system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html { scroll-behavior: smooth; }
+body { background: rgb(var(--paper)); color: rgb(var(--ink)); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 3px solid rgb(var(--mark)); outline-offset: 3px; }
+.dark-zone :focus-visible { outline-color: rgb(var(--wool)); }
+
+/* Hammer cursor (mouse only). Hotspot is the striking face, at (14, 4).
+   Links and buttons get the raised "strike" version; text fields keep the text cursor. */
+@media (hover: hover) and (pointer: fine) {
+  html { cursor: url("/cursor-hammer.svg") 14 4, auto; }
+  a, button, summary, select, label, [role="button"] { cursor: url("/cursor-hammer-strike.svg") 14 4, pointer; }
+  input, textarea { cursor: text; }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* One orchestrated moment: the wall builds itself, layer by layer */
+@keyframes build { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.layer-in { transform-box: fill-box; transform-origin: left center; animation: build 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .layer-in { animation: none; }
+  * { transition: none !important; }
 }
