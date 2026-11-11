@@ -2,6 +2,7 @@ import Logo from "@/components/Logo";
 import Photo from "@/components/Photo";
 import WallSection from "@/components/WallSection";
 import ContactForm from "@/components/ContactForm";
+import ContactModal from "@/components/ContactModal";
 import { site } from "@/lib/site";
 
 const services = [
@@ -34,9 +35,49 @@ const faqs = [
   { q: "Comment obtenir un devis ?", a: "Remplissez le formulaire ou appelez-nous. Nous fixons une visite et vous envoyons un devis détaillé." },
 ];
 
+// Structured data for Google: the business, its services and the FAQ (rich results).
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "HomeAndConstructionBusiness",
+      "@id": `${site.url}/#business`,
+      name: site.name,
+      slogan: site.tagline,
+      description: site.description,
+      url: site.url,
+      telephone: site.phoneHref,
+      email: site.email,
+      logo: `${site.url}/logo.png`,
+      image: `${site.url}/images/hero-attic-insulation.jpg`,
+      areaServed: site.city || site.area,
+      ...(site.city ? { address: { "@type": "PostalAddress", addressLocality: site.city, addressCountry: "FR" } } : {}),
+      priceRange: "Devis gratuit",
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: "Services",
+        itemListElement: services.map((s) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name: s.title, description: s.text } })),
+      },
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${site.url}/#website`,
+      url: site.url,
+      name: site.name,
+      inLanguage: "fr-FR",
+      publisher: { "@id": `${site.url}/#business` },
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+    },
+  ],
+};
+
 export default function Home() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       {/* HEADER + HERO */}
       <div className="dark-zone bg-steel text-paper">
         <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
@@ -47,7 +88,7 @@ export default function Home() {
             <a href="#realisations" className="hover:text-wool">Réalisations</a>
             <a href="#contact" className="hover:text-wool">Contact</a>
           </nav>
-          <a href={`tel:${site.phoneHref}`} className="rounded bg-wool px-4 py-2 text-sm font-bold text-steel">{site.phone}</a>
+          <ContactModal />
         </header>
 
         <section id="top" className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-20 pt-12 lg:grid-cols-[1fr_1.05fr] lg:pt-20">
@@ -67,6 +108,7 @@ export default function Home() {
         </section>
       </div>
 
+      <main>
       {/* SERVICES */}
       <section id="services" className="mx-auto max-w-6xl px-5 py-20">
         <h2 className="max-w-xl font-display text-4xl font-extrabold tracking-tight">Quatre métiers, un seul chantier propre.</h2>
@@ -75,7 +117,7 @@ export default function Home() {
             <article key={s.title} className="grid items-center gap-6 border-b border-steel/25 py-8 md:grid-cols-[1.1fr_1.4fr_0.9fr]">
               <h3 className="font-display text-2xl font-bold">{s.title}</h3>
               <p className="max-w-[34rem] leading-relaxed text-ink/80">{s.text}</p>
-              <Photo name={s.photo} label={s.title} className="h-28 rounded md:h-32" />
+              <Photo name={s.photo} label={`${s.title} par ${site.name}`} className="h-28 rounded md:h-32" />
             </article>
           ))}
         </div>
@@ -104,7 +146,7 @@ export default function Home() {
         <div className="mt-10 grid auto-rows-[200px] gap-3 sm:grid-cols-4">
           {projects.map((p) => (
             <figure key={p.name} className={`relative overflow-hidden rounded ${p.span}`}>
-              <Photo name={p.photo} label={p.name} className="absolute inset-0" />
+              <Photo name={p.photo} label={`${p.name} : chantier ${site.name}`} className="absolute inset-0 h-full" />
               <figcaption className="absolute inset-x-0 bottom-0 bg-steel/80 px-4 py-2 text-sm font-semibold text-paper">{p.name}</figcaption>
             </figure>
           ))}
@@ -112,7 +154,7 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section className="bg-board py-20">
+      <section id="faq" className="bg-board py-20">
         <div className="mx-auto max-w-3xl px-5">
           <h2 className="font-display text-4xl font-extrabold tracking-tight">Questions fréquentes</h2>
           <div className="mt-8 divide-y divide-steel/25 border-y border-steel/25">
@@ -139,6 +181,8 @@ export default function Home() {
         </div>
         <ContactForm />
       </section>
+
+      </main>
 
       <footer className="dark-zone bg-steel py-10 text-sm text-paper/75">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5">

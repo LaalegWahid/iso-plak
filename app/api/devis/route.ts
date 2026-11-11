@@ -48,6 +48,11 @@ export async function POST(req: Request) {
   const email = str(body.email) || undefined;
   const type = str(body.type);
   const message = str(body.message) ?? "";
+  const address = str(body.address)?.slice(0, 300) || undefined;
+  const lat = Number(str(body.lat) || NaN);
+  const lng = Number(str(body.lng) || NaN);
+  const located = Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+  const mapUrl = located ? `https://www.google.com/maps?q=${lat.toFixed(6)},${lng.toFixed(6)}` : undefined;
 
   if (!name || name.length < 2 || name.length > 100) return fail(400, "Indiquez votre nom.");
   if (!phone || !/^[0-9+().\s-]{6,20}$/.test(phone)) return fail(400, "Indiquez un numéro de téléphone valide.");
@@ -73,11 +78,18 @@ export async function POST(req: Request) {
     ["Email", email ?? "non renseigné"],
     ["Projet", type],
     ["Détails", message || "aucun détail"],
+    ["Lieu du chantier", located ? [address, mapUrl].filter(Boolean).join(" · ") : address ?? "non indiqué"],
   ];
   const text = rows.map(([k, v]) => `${k} : ${v}`).join("\n");
   const html = `<h2 style="font-family:sans-serif">Nouvelle demande de devis</h2>
 <table style="font-family:sans-serif;border-collapse:collapse">${rows
-    .map(([k, v]) => `<tr><td style="padding:6px 12px 6px 0;font-weight:bold;vertical-align:top">${k}</td><td style="padding:6px 0;white-space:pre-wrap">${escapeHtml(v)}</td></tr>`)
+    .map(([k, v]) => {
+      // The map link is built by us from validated numbers, so it is safe to make clickable.
+      const cell = mapUrl && v.endsWith(mapUrl)
+        ? `${escapeHtml(v.slice(0, -mapUrl.length))}<a href="${mapUrl}">Voir sur la carte</a>`
+        : escapeHtml(v);
+      return `<tr><td style="padding:6px 12px 6px 0;font-weight:bold;vertical-align:top">${k}</td><td style="padding:6px 0;white-space:pre-wrap">${cell}</td></tr>`;
+    })
     .join("")}</table>
 <p style="font-family:sans-serif;color:#666;font-size:13px">Envoyé depuis le formulaire du site ${escapeHtml(site.name)}.</p>`;
 

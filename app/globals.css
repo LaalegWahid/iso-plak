@@ -38,3 +38,52 @@ body { background: rgb(var(--paper)); color: rgb(var(--ink)); font-family: var(-
   .layer-in { animation: none; }
   * { transition: none !important; }
 }
+
+/* Job-site pin on the quote form map (Leaflet divIcon). Tip sits at the anchor point. */
+.map-pin {
+  display: block; width: 22px; height: 22px;
+  background: rgb(var(--wool)); border: 3px solid rgb(var(--steel));
+  border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.35);
+}
+/* No page scroll behind the open contact modal. */
+html:has(dialog[open]) { overflow: hidden; }
+
+/* ---- Loading page (components/Preloader.tsx) ---- */
+#preloader {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: rgb(var(--steel)); color: rgb(var(--paper));
+  transition: opacity 0.5s ease, visibility 0s linear 0.5s;
+}
+#preloader[data-done] { opacity: 0; visibility: hidden; pointer-events: none; }
+html:has(#preloader:not([data-done])) { overflow: hidden; }
+/* Hold the hero wall animation until the loading page is gone, so it is not played unseen. */
+html:has(#preloader:not([data-done])) .layer-in { animation-play-state: paused; }
+.preloader-bar { transform: scaleX(0); transform-origin: left center; transition: transform 0.3s ease; }
+@keyframes hammer-tap {
+  0%, 100% { transform: rotate(0deg); }
+  35% { transform: rotate(-28deg); }
+  55% { transform: rotate(6deg); }
+  65% { transform: rotate(0deg); }
+}
+.preloader-hammer { transform-origin: 20% 80%; animation: hammer-tap 0.9s ease-in-out infinite; }
+
+/* ---- Contact modal ---- */
+@keyframes modal-in { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+dialog.contact-modal[open] { animation: modal-in 0.28s cubic-bezier(0.2, 0.7, 0.2, 1); }
+dialog.contact-modal[open]::backdrop { animation: fade-in 0.28s ease; }
+
+/* Small spinner: map loading, form sending. */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block; width: 1.1em; height: 1.1em; flex: none;
+  border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preloader-hammer, dialog.contact-modal[open], dialog.contact-modal[open]::backdrop { animation: none; }
+  .spinner { animation-duration: 1.6s; }
+}

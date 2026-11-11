@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { projectTypes, site } from "@/lib/site";
+import LocationPicker from "@/components/LocationPicker";
 
 // Posts the quote request to /api/devis, which emails it to the owner (Gmail SMTP).
 type Status = "idle" | "sending" | "sent" | "error";
@@ -8,6 +9,7 @@ type Status = "idle" | "sending" | "sent" | "error";
 export default function ContactForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
+  const [resetKey, setResetKey] = useState(0); // remounts the map picker after a successful send
   const startedAt = useRef(0);
   useEffect(() => {
     startedAt.current = Date.now();
@@ -27,6 +29,7 @@ export default function ContactForm() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data.error || "L’envoi a échoué.");
       form.reset();
+      setResetKey((k) => k + 1);
       setStatus("sent");
     } catch (err) {
       setError(err instanceof Error ? err.message : "L’envoi a échoué.");
@@ -67,6 +70,7 @@ export default function ContactForm() {
       <label className="block text-sm font-semibold">Détails (surface, ville, délai)
         <textarea name="message" rows={4} maxLength={3000} className={field} />
       </label>
+      <LocationPicker key={resetKey} />
 
       {/* Spam trap: hidden from people, filled in by bots. */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
@@ -78,7 +82,11 @@ export default function ContactForm() {
         disabled={status === "sending"}
         className="rounded bg-wool px-6 py-3 font-display font-bold text-steel transition-transform hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-70"
       >
-        {status === "sending" ? "Envoi…" : "Envoyer ma demande de devis"}
+        {status === "sending" ? (
+          <span className="inline-flex items-center gap-2"><span className="spinner" aria-hidden="true" />Envoi en cours…</span>
+        ) : (
+          "Envoyer ma demande de devis"
+        )}
       </button>
       <p role="alert" className="text-sm text-ink/80">
         {status === "error" && (
